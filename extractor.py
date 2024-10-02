@@ -28,6 +28,9 @@ exclude_file = [
     "gauge"
 ]
 
+#TODO choise for user agent
+user_agent = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
+
 # Global variables to hold results and cookies
 results = {}
 cookies = {}
@@ -58,7 +61,8 @@ if args.cookie:
             continue
 
 # Regular expression to match JavaScript function definitions
-pattern = r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(.*?\)"
+# pattern = r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(.*?\)"
+pattern = r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)"
 
 # Read URLs from the input file
 for url in fileinput.input(files=args.input):
@@ -71,14 +75,16 @@ for url in fileinput.input(files=args.input):
 
     # If the URL ends with .js, get JavaScript functions directly from the content
     if url.endswith(".js"):
-        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies).text)]
+        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies,headers=user_agent).text)]
 
     # For other URLs, parse the HTML to find <script> tags
     result = requests.get(url, cookies=cookies)
     soup = BeautifulSoup(result.text, 'html.parser')
     for script in soup.find_all('script'):
         if not script.get("src") and script.get("type") not in exclude_type:
-            results[url] = [x for x in re.findall(pattern, script.text)]
+            if url not in results:
+                results[url] = []
+            results[url].extend([x for x in re.findall(pattern, script.text)])
 
 # Print the results with syntax highlighting
 print(highlight(json.dumps(results, ensure_ascii=False, indent=1), lexers.JsonLexer(), formatters.TerminalFormatter()))
