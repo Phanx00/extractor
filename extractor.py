@@ -75,10 +75,10 @@ for url in fileinput.input(files=args.input):
 
     # If the URL ends with .js, get JavaScript functions directly from the content
     if url.endswith(".js"):
-        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies,headers=user_agent).text)]
+        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies, headers=user_agent).text)]
 
     # For other URLs, parse the HTML to find <script> tags
-    result = requests.get(url, cookies=cookies)
+    result = requests.get(url, cookies=cookies, headers=user_agent)
     soup = BeautifulSoup(result.text, 'html.parser')
     for script in soup.find_all('script'):
         if not script.get("src") and script.get("type") not in exclude_type:
