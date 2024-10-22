@@ -11,7 +11,7 @@ A script for extract JS function name from a list of url
 ### Usage
 
 ```
-python3 extractor.py -i <input-file> <-c key1=value1;key2=valu2;> <-i 1>
+python3 extractor.py -i <input-file> <-c key1=value1;key2=valu2;> <-s 1>
 ```
 
 ### Example of output:
