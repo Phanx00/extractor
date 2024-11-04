@@ -6,6 +6,8 @@ import requests
 import json
 import time
 from pygments import highlight, lexers, formatters
+import urllib3
+urllib3.disable_warnings()
 
 # Lists for exclusion filters
 exclude_type = [
@@ -28,7 +30,6 @@ exclude_file = [
     "gauge"
 ]
 
-#TODO choise for user agent
 user_agent = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"}
 
 # Global variables to hold results and cookies
@@ -75,10 +76,10 @@ for url in fileinput.input(files=args.input):
 
     # If the URL ends with .js, get JavaScript functions directly from the content
     if url.endswith(".js"):
-        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies, headers=user_agent).text)]
+        results[url] = [x for x in re.findall(pattern, requests.get(url, cookies=cookies, headers=user_agent, verify=False).text)]
 
     # For other URLs, parse the HTML to find <script> tags
-    result = requests.get(url, cookies=cookies, headers=user_agent)
+    result = requests.get(url, cookies=cookies, headers=user_agent, verify=False)
     soup = BeautifulSoup(result.text, 'html.parser')
     for script in soup.find_all('script'):
         if not script.get("src") and script.get("type") not in exclude_type:
