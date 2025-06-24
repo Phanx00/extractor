@@ -114,20 +114,28 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             return
         self.hashes_seen.add(content_hash)
 
-        pattern = r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)"
+        patterns = [
+          r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(",
+          r"([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*function\s*\(",
+          r"([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*\([^)]*\)\s*=>"
+        ]
+
         functions = []
 
         try:
             if ".js" in normalized_url or "javascript" in content_type:
-                functions = re.findall(pattern, content)
+                for pat in patterns:
+                   functions += re.findall(pat, content)
             else:
                 soup = BeautifulSoup(content, "html.parser")
                 for script in soup.find_all("script"):
                     script_type = script.get("type", "").lower()
                     if not script.get("src") and script_type not in exclude_type:
-                        functions += re.findall(pattern, script.text)
+                        for pat in patterns:
+                            functions += re.findall(pat, script.text)
         except Exception as e:
             functions = ["Error during analysis: %s" % str(e)]
+    
 
         if functions:
             SwingUtilities.invokeLater(lambda: self.updateTable(normalized_url, functions))
